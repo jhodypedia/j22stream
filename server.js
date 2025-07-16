@@ -4,19 +4,20 @@ const path = require('path');
 const axios = require('axios');
 const cors = require('cors');
 const FormData = require('form-data');
+const bodyParser = require('body-parser');
 
 // === Konfigurasi ===
 const BOT_TOKEN = '7852601048:AAH7ktrLjL4oQQ21zzcVt9F7TuFrbB1VZq0';
-const CHANNEL_ID = '-1002725017237';     // <- Channel ID dari kamu
-const ADMIN_ID = '6649507567';           // <- Chat ID admin dari kamu
+const CHANNEL_ID = '-1002725017237';
+const ADMIN_ID = '6649507567';
 const PORT = process.env.PORT || 3000;
 
 const VIDEO_FOLDER = path.join(__dirname, 'videos');
 const VIDEO_LIST_PATH = path.join(__dirname, 'videos.json');
 
-// === App Setup ===
 const app = express();
 app.use(cors());
+app.use(bodyParser.json());
 
 // === Format Nama Video ===
 function formatDateName() {
@@ -89,13 +90,14 @@ async function uploadAllVideos() {
   }
 }
 
-// === API Endpoint ===
+// === API: Ambil Daftar Video ===
 app.get('/api/videos', (req, res) => {
   if (!fs.existsSync(VIDEO_LIST_PATH)) return res.json([]);
   const videos = JSON.parse(fs.readFileSync(VIDEO_LIST_PATH));
   res.json(videos);
 });
 
+// === API: Streaming Redirect ===
 app.get('/api/stream/:file_id', async (req, res) => {
   const fileId = req.params.file_id;
   try {
@@ -108,8 +110,27 @@ app.get('/api/stream/:file_id', async (req, res) => {
   }
 });
 
-// === Jalankan Server dan Upload Video ===
+// === API: Respon /start bot (optional, kalau pakai webhook) ===
+app.post(`/webhook/${BOT_TOKEN}`, (req, res) => {
+  const message = req.body.message;
+  if (!message || !message.text) return res.sendStatus(200);
+
+  const chatId = message.chat.id;
+  const text = message.text;
+
+  if (text === '/start') {
+    axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      chat_id: chatId,
+      text: `Selamat datang di J22Stream 👋\nKetik /upload untuk mulai mengunggah video.`,
+      parse_mode: 'Markdown'
+    });
+  }
+
+  res.sendStatus(200);
+});
+
+// === Jalankan Server ===
 app.listen(PORT, async () => {
   console.log(`🚀 Backend J22Stream aktif di http://localhost:${PORT}`);
-  await uploadAllVideos(); // upload otomatis
+  await uploadAllVideos(); // Upload otomatis saat start
 });
