@@ -1,13 +1,20 @@
 {
   "name": "j22stream-backend",
   "version": "1.0.0",
+  "description": "Backend untuk J22Stream - upload video ke Telegram dan API streaming",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "keywords": ["streaming", "telegram", "video", "api", "express"],
+  "author": "J22Team",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "form-data": "^4.0.0"
+    "form-data": "^4.0.0",
+    "node-telegram-bot-api": "^0.61.0"
   }
 }
